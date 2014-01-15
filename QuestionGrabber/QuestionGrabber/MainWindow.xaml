@@ -1,0 +1,45 @@
+﻿<Window x:Class="QuestionGrabber.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="DarkAutumn's Question Grabber" Height="800" Width="500"
+        Background="AliceBlue" SizeToContent="Manual"
+        DataContext="{Binding RelativeSource={RelativeSource Self}}"
+        >
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="0"/>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="80"/>
+        </Grid.RowDefinitions>
+
+        <!--TextBlock FontWeight="Bold" Grid.Row="0">Questions from stream zlfreebird:</-->
+        
+        <ScrollViewer Grid.Row="1" Name="ScrollBar">
+            <ListView Name="AllItems" BorderThickness="0" Background="AliceBlue" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ItemsSource="{Binding Messages}">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <DockPanel ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                            <Image Margin="1" Visibility="{Binding SubscriberIcon}" VerticalAlignment="Top" Height="19" Width="19" Source="pack://application:,,,/Resources/star.png" />
+                            <TextBlock FontSize="{Binding UserFontSize}" Margin="0,0,3,0" Visibility="{Binding UserVisibility}" FontWeight="{Binding UserWeight}" Foreground="{Binding UserColor}" Text="{Binding User}" />
+                            <TextBlock FontSize="{Binding MessageFontSize}" TextWrapping="Wrap" Visibility="{Binding MessageVisibility}" FontWeight="{Binding MessageWeight}" Foreground="{Binding MessageColor}" Text="{Binding Message}" />
+                        </DockPanel>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+
+            </ListView>
+        </ScrollViewer>
+
+        <Grid Grid.Row="2">
+            <StackPanel Margin="5,5">
+                <CheckBox IsChecked="{Binding ShowQuestions, Mode=TwoWay}">Show questions</CheckBox>
+                <CheckBox IsChecked="{Binding ShowImportant, Mode=TwoWay}">Show highlighted messages</CheckBox>
+                <CheckBox IsChecked="{Binding ShowSubs, Mode=TwoWay}">Show new subscriptions</CheckBox>
+                <CheckBox IsChecked="{Binding ShowStatus, Mode=TwoWay}">Show connection messages</CheckBox>
+            </StackPanel>
+            <StackPanel HorizontalAlignment="Right" VerticalAlignment="Bottom" Height="30" Grid.Row="1" Margin="5" Orientation="Horizontal" >
+                <Button Margin="5,0" Width="70" Name="Connect" Click="Connect_Click">Reconnect</Button>
+                <Button Margin="5,0" Width="70" Click="Clear_Click">Clear</Button>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>
