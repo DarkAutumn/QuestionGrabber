@@ -36,7 +36,7 @@
     <SignAssembly>true</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
-    <AssemblyOriginatorKeyFile>DarkAutumnKey.pfx</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>DarkAutumn.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -97,6 +97,7 @@
       <Link>IrcDotNet.snk</Link>
     </None>
     <None Include="ClassDiagram.cd" />
+    <None Include="DarkAutumn.snk" />
     <None Include="DarkAutumnKey.pfx" />
   </ItemGroup>
   <ItemGroup />

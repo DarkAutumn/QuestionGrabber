@@ -91,13 +91,27 @@ namespace QuestionGrabber
         NewSubscriber,
         NotifySubscriber,
         RefilterInPlace,
-        RefilterAsyncEvent
+        RefilterAsyncEvent,
+        StatusUpdate
     }
 
     class Event
     {
         public EventType Type { get; set; }
     }
+
+
+    class StatusEvent : Event
+    {
+        public string Status { get; set; }
+
+        public StatusEvent(string status)
+        {
+            Type = EventType.StatusUpdate;
+            Status = status;
+        }
+    }
+
 
     class NewListItemEvent : Event
     {
@@ -311,6 +325,8 @@ namespace QuestionGrabber
         public List<string> HighlightList { get; set; }
         public List<string> UserIgnoreList { get; set; }
         public List<string> TextIgnoreList { get; set; }
+
+        public bool CheckUpdates { get; set; }
 
         static string FileName 
         {

@@ -172,6 +172,15 @@ namespace QuestionGrabber
 
         public MainWindow()
         {
+            LoadOptions();
+
+            Task t = new Task(delegate() { CheckIfUpdateAvailable(); });
+            t.Start();
+
+            // Create the TwitchClient instance and connect to the twitch server on a background
+            // thread.
+            InitIrc();
+
             if (!Debugger.IsAttached)
                 AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
@@ -182,10 +191,50 @@ namespace QuestionGrabber
             m_dispatcherTimer.Tick += dispatcherTimer_Tick;
             m_dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 250);
             m_dispatcherTimer.Start();
+        }
 
-            // Create the TwitchClient instance and connect to the twitch server on a background
-            // thread.
-            InitIrc();
+
+        void CheckIfUpdateAvailable()
+        {
+            bool error = false;
+
+            try
+            {
+                var req = (System.Net.HttpWebRequest)System.Net.HttpWebRequest.Create(@"http://idleengineer.com/qg_version.txt");
+                req.UserAgent = "Question Grabber Bot/0.0.0.1";
+                var response = req.GetResponse();
+                var fromStream = response.GetResponseStream();
+
+                StreamReader reader = new StreamReader(fromStream);
+                string line = reader.ReadLine();
+                if (line != null)
+                {
+                    string[] values = line.Split(new char[] { ' ' }, 1);
+                    if (values.Length >= 2)
+                    {
+                        Assembly assembly = Assembly.GetExecutingAssembly();
+                        FileVersionInfo info = FileVersionInfo.GetVersionInfo(assembly.Location);
+
+                        if (info.FileVersion != values[0])
+                            m_eventQueue.Enqueue(new StatusEvent(values[1]));
+                    }
+                    else
+                    {
+                        error = true;
+                    }
+                }
+                else
+                {
+                    error = true;
+                }
+            }
+            catch
+            {
+                error = true;
+            }
+
+            if (error)
+                m_eventQueue.Enqueue(new StatusEvent("Failed to check for Question Grabber updates..."));
         }
 
         void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
@@ -255,6 +304,15 @@ namespace QuestionGrabber
             m_twitch.MessageReceived += m_client_MessageReceived;
             m_twitch.InformSubscriber += m_client_InformSubscriber;
 
+            Task t = new Task(delegate() { m_twitch.Connect(m_options.Stream, m_options.TwitchUsername, m_options.OauthPassword); });
+            t.Start();
+        }
+
+        /// <summary>
+        /// Load the options from the option file
+        /// </summary>
+        private void LoadOptions()
+        {
             try
             {
                 m_options = Options.Load("options.ini");
@@ -269,9 +327,6 @@ namespace QuestionGrabber
                 MessageBox.Show("Error loading options.ini:\n" + e.Message, "Error loading options.ini.");
                 Environment.Exit(-1);
             }
-
-            Task t = new Task(delegate() { m_twitch.Connect(m_options.Stream, m_options.TwitchUsername, m_options.OauthPassword); });
-            t.Start();
         }
 
 
@@ -379,6 +434,9 @@ namespace QuestionGrabber
                     ResetConnection();
             }
 
+            // If we are refiltering (asynchronously) the list, actually stop all processing
+            // on the list until it's complete.  This prevents us from modifying the message
+            // list while we are reading from it on another thread.
             if (m_refilterAsync != null)
             {
                 if (!m_refilterAsync.Complete)
@@ -417,7 +475,14 @@ namespace QuestionGrabber
                         refilterInPlace = true;
                         break;
 
-                    // If we need to refilter the 
+                    case EventType.StatusUpdate:
+                        var status = ((StatusEvent)evt).Status;
+                        AddItem(ListItem.CreateFromStatus(status));
+                        break;
+
+                    // If we need to refilter the list (due to the user changing filtering options),
+                    // we do that work on a background thread.  During that time, we stop all message
+                    // processing, hence the return instead of break here.
                     case EventType.RefilterAsyncEvent:
                         m_refilterAsync = ((RefilterResultEvent)evt);
                         StartAsyncRefilter(m_refilterAsync);
