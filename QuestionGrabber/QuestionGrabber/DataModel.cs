@@ -92,7 +92,8 @@ namespace QuestionGrabber
         NotifySubscriber,
         RefilterInPlace,
         RefilterAsyncEvent,
-        StatusUpdate
+        StatusUpdate,
+        DuplicateListItem
     }
 
     class Event
@@ -123,6 +124,20 @@ namespace QuestionGrabber
             Item = item;
         }
     }
+
+
+    class DuplicateListItemEvent : Event
+    {
+        public ListItem Item { get; set; }
+
+        public DuplicateListItemEvent(ListItem item)
+        {
+            Type = EventType.DuplicateListItem;
+            Item = item;
+        }
+    }
+
+
 
     class NewSubscriberEvent : NewListItemEvent
     {
@@ -192,6 +207,8 @@ namespace QuestionGrabber
 
     public class ListItem : INotifyPropertyChanged
     {
+        public int Index { get; set; }
+
         public string User { get; set; }
         public Visibility UserVisibility { get; set; }
         public Brush UserColor { get; set; }
@@ -316,7 +333,7 @@ namespace QuestionGrabber
     public class Options
     {
         string m_stream, m_twitchName, m_oauthPass;
-        bool m_checkUpdates;
+        bool m_checkUpdates, m_preventDuplicates;
 
         public string Stream { get { return m_stream; } }
         public string TwitchUsername { get { return m_twitchName; } }
@@ -328,6 +345,7 @@ namespace QuestionGrabber
         public List<string> TextIgnoreList { get; set; }
 
         public bool CheckUpdates { get { return m_checkUpdates; } }
+        public bool PreventDuplicates { get { return m_preventDuplicates; } }
 
         static string FileName 
         {
@@ -384,7 +402,8 @@ namespace QuestionGrabber
             section = reader.GetSectionByName("settings");
             if (section != null)
             {
-                GetBoolValue(section, "checkforupdates", ref options.m_checkUpdates, true);
+                GetBoolValue(section, "CheckForUpdates", ref options.m_checkUpdates, true);
+                GetBoolValue(section, "PreventDuplicates", ref options.m_preventDuplicates, true);
             }
             
             return options;

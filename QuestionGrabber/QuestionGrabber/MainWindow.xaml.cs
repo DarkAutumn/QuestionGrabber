@@ -41,6 +41,7 @@ namespace QuestionGrabber
         private bool m_error = false;
         bool m_showQuestions = true, m_showImportant = true, m_showStatus = true, m_showSubs = true;
         ObservableCollection<ListItem> m_messages = new ObservableCollection<ListItem>();
+        Dictionary<string, ListItem> m_messageMap;
 
         /// <summary>
         /// These are the messages that are displayed in the main window.
@@ -194,6 +195,9 @@ namespace QuestionGrabber
             m_dispatcherTimer.Tick += dispatcherTimer_Tick;
             m_dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 250);
             m_dispatcherTimer.Start();
+
+            if (m_options.PreventDuplicates)
+                m_messageMap = new Dictionary<string, ListItem>();
         }
 
 
@@ -357,7 +361,13 @@ namespace QuestionGrabber
                     if (ShouldIgnore(lowerText))
                         return;
 
+                    if (m_messageMap != null && CheckDuplicate(user, lowerText))
+                        return;
+
                     ListItem item = ListItem.CreateFromHighlight(m_twitch.ChannelData, user, text);
+                    if (m_messageMap != null)
+                        m_messageMap[lowerText] = item;
+
                     m_eventQueue.Enqueue(new NewListItemEvent(item));
                     return;
                 }
@@ -371,11 +381,39 @@ namespace QuestionGrabber
                     if (ShouldIgnore(lowerText))
                         return;
 
+                    if (m_messageMap != null && CheckDuplicate(user, lowerText))
+                        return;
+
                     ListItem item = ListItem.CreateFromQuestion(m_twitch.ChannelData, user, text);
+                    if (m_messageMap != null)
+                        m_messageMap[lowerText] = item;
+
                     m_eventQueue.Enqueue(new NewListItemEvent(item));
                     return;
                 }
             }
+        }
+
+        /// <summary>
+        /// Checks if the message was a duplicate of another message, and if so enqueues a duplicate
+        /// event.
+        /// </summary>
+        /// <param name="user">The user who sent the message.</param>
+        /// <param name="lowerText">The lower case text of the message.</param>
+        /// <returns>True if the message was a duplicate and an event was queued.</returns>
+        private bool CheckDuplicate(string user, string lowerText)
+        {
+            ListItem item = null;
+            if (m_messageMap.TryGetValue(lowerText, out item))
+            {
+                if (!item.User.Equals(user + ':', StringComparison.CurrentCultureIgnoreCase))
+                    item.User = "multiple users:";
+
+                m_eventQueue.Enqueue(new DuplicateListItemEvent(item));
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -483,6 +521,18 @@ namespace QuestionGrabber
                         AddItem(ListItem.CreateFromStatus(status));
                         break;
 
+                    case EventType.DuplicateListItem:
+                        var dupe = ((DuplicateListItemEvent)evt).Item;
+                        int i = dupe.Index;
+                        Debug.Assert(dupe == Messages[i]);
+
+                        Messages.RemoveAt(i);
+                        for (; i < Messages.Count; ++i)
+                            Messages[i].Index = i;
+
+                        AddItem(dupe);
+                        break;
+
                     // If we need to refilter the list (due to the user changing filtering options),
                     // we do that work on a background thread.  During that time, we stop all message
                     // processing, hence the return instead of break here.
@@ -500,10 +550,16 @@ namespace QuestionGrabber
                 int i = 0;
                 while (i < Messages.Count)
                 {
-                    if (!AllowItem(Messages[i]))
+                    var curr = Messages[i];
+                    if (!AllowItem(curr))
+                    {
                         Messages.RemoveAt(i);
+                    }
                     else
+                    {
+                        curr.Index = i;
                         i++;
+                    }
                 }
             }
 
@@ -523,6 +579,15 @@ namespace QuestionGrabber
             }
         }
 
+
+        [Conditional("_DEBUG")]
+        void CheckIndicies()
+        {
+            for (int i = 0; i < Messages.Count; ++i)
+                Debug.Assert(Messages[i].Index == i);
+        }
+
+
         /// <summary>
         /// Add an item to the list of grabbed messages.  If the item is not
         /// currently filtered, we will add this to the display.
@@ -533,7 +598,10 @@ namespace QuestionGrabber
             m_allItems.Add(item);
 
             if (AllowItem(item))
+            {
+                item.Index = Messages.Count;
                 Messages.Add(item);
+            }
 
             // TODO: Only scroll to the end if the bar was previously at the end.
             ScrollBar.ScrollToEnd();
@@ -568,7 +636,12 @@ namespace QuestionGrabber
             Task t = new Task(delegate()
                 {
                     var items = from item in m_allItems where AllowItem(item) select item;
-                    evt.Result = new ObservableCollection<ListItem>(items);
+                    var messages = new ObservableCollection<ListItem>(items);
+
+                    for (int i = 0; i < messages.Count; ++i)
+                        messages[i].Index = i;
+
+                    evt.Result = messages;
                 });
 
             t.Start();

@@ -98,6 +98,7 @@
     </EmbeddedResource>
     <None Include="DarkAutumn.snk" />
     <None Include="DarkAutumnKey.pfx" />
+    <None Include="options.ini" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
