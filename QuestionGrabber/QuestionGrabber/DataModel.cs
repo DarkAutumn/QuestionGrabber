@@ -316,6 +316,7 @@ namespace QuestionGrabber
     public class Options
     {
         string m_stream, m_twitchName, m_oauthPass;
+        bool m_checkUpdates;
 
         public string Stream { get { return m_stream; } }
         public string TwitchUsername { get { return m_twitchName; } }
@@ -326,7 +327,7 @@ namespace QuestionGrabber
         public List<string> UserIgnoreList { get; set; }
         public List<string> TextIgnoreList { get; set; }
 
-        public bool CheckUpdates { get; set; }
+        public bool CheckUpdates { get { return m_checkUpdates; } }
 
         static string FileName 
         {
@@ -353,9 +354,9 @@ namespace QuestionGrabber
             if (section == null)
                 throw new InvalidOperationException("Options file missing [Stream] section.");
 
-            GetValue(options, section, out options.m_stream, "stream", section.GetValue("stream"));
-            GetValue(options, section, out options.m_twitchName, "twitchname", section.GetValue("twitchname") ?? section.GetValue("user") ?? section.GetValue("username"));
-            GetValue(options, section, out options.m_oauthPass, "oauth", section.GetValue("oauth") ?? section.GetValue("pass") ?? section.GetValue("password"));
+            GetStringValue(options, section, out options.m_stream, "stream", section.GetValue("stream"));
+            GetStringValue(options, section, out options.m_twitchName, "twitchname", section.GetValue("twitchname") ?? section.GetValue("user") ?? section.GetValue("username"));
+            GetStringValue(options, section, out options.m_oauthPass, "oauth", section.GetValue("oauth") ?? section.GetValue("pass") ?? section.GetValue("password"));
 
             if (!options.m_oauthPass.StartsWith("oauth:"))
                 throw new FormatException("The 'oauth' field in the [Stream] section must start with 'oauth:'.\n\nThis is not your twitch password, please get your api key from www.twitchapps.com/tmi.");
@@ -379,8 +380,55 @@ namespace QuestionGrabber
             if (section != null)
                 foreach (string line in section.EnumerateRawStrings())
                     options.TextIgnoreList.Add(DoReplacements(options, line));
+
+            section = reader.GetSectionByName("settings");
+            if (section != null)
+            {
+                GetBoolValue(section, "checkforupdates", ref options.m_checkUpdates, true);
+            }
             
             return options;
+        }
+
+        private static void GetBoolValue(IniSection section, string sectionName, ref bool result, bool defaultResult)
+        {
+            bool? res = null;
+            string value = section.GetValue(sectionName);
+            if (value != null)
+                res = TryParseBool(value);
+
+             result = res ?? defaultResult;
+        }
+
+        private static bool? TryParseBool(string value)
+        {
+            bool result;
+            if (bool.TryParse(value, out result))
+                return result;
+
+            if (value.Equals("true", StringComparison.CurrentCultureIgnoreCase))
+                return true;
+            else if (value.Equals("t", StringComparison.CurrentCultureIgnoreCase))
+                return true;
+            else if (value.Equals("yes", StringComparison.CurrentCultureIgnoreCase))
+                return true;
+            else if (value.Equals("y", StringComparison.CurrentCultureIgnoreCase))
+                return true;
+            else if (value.Equals("1", StringComparison.CurrentCultureIgnoreCase))
+                return true;
+
+            else if (value.Equals("false", StringComparison.CurrentCultureIgnoreCase))
+                return false;
+            else if (value.Equals("f", StringComparison.CurrentCultureIgnoreCase))
+                return false;
+            else if (value.Equals("no", StringComparison.CurrentCultureIgnoreCase))
+                return false;
+            else if (value.Equals("n", StringComparison.CurrentCultureIgnoreCase))
+                return false;
+            else if (value.Equals("0", StringComparison.CurrentCultureIgnoreCase))
+                return false;
+
+            return null;
         }
 
         private static string DoReplacements(Options options, string value)
@@ -394,7 +442,7 @@ namespace QuestionGrabber
             return value;
         }
 
-        private static void GetValue(Options options, IniSection section, out string key, string name, string value)
+        private static void GetStringValue(Options options, IniSection section, out string key, string name, string value)
         {
             if (string.IsNullOrWhiteSpace(value))
                 throw new FormatException(string.Format("Section [{0}] is missing value '{1}'.", section.Name, name));
