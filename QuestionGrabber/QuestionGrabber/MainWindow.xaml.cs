@@ -174,8 +174,11 @@ namespace QuestionGrabber
         {
             LoadOptions();
 
-            Task t = new Task(delegate() { CheckIfUpdateAvailable(); });
-            t.Start();
+            if (m_options.CheckUpdates)
+            {
+                Task t = new Task(delegate() { CheckIfUpdateAvailable(); });
+                t.Start();
+            }
 
             // Create the TwitchClient instance and connect to the twitch server on a background
             // thread.
