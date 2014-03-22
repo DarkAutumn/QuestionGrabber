@@ -199,7 +199,7 @@ namespace QuestionGrabber
                 int i = text.IndexOf(" just");
                 if (i > 0)
                 {
-                    OnUserSubscribed(text, i);
+                    OnUserSubscribed(text.Substring(0, i));
                     return;
                 }
             }
@@ -414,11 +414,11 @@ namespace QuestionGrabber
                 status(this, string.Format(fmt, objs));
         }
 
-        protected void OnUserSubscribed(string text, int i)
+        protected void OnUserSubscribed(string text)
         {
             var subscribed = UserSubscribed;
             if (subscribed != null)
-                subscribed(this, text.Substring(0, i));
+                subscribed(this, text);
         }
 
         protected void OnMessageReceived(IrcMessageEventArgs e)

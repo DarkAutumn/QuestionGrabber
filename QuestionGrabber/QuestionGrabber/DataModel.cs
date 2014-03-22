@@ -332,9 +332,10 @@ namespace QuestionGrabber
 
     public class Options
     {
-        string m_stream, m_twitchName, m_oauthPass;
+        string m_stream, m_twitchName, m_oauthPass, m_subscribers;
         bool m_checkUpdates, m_preventDuplicates;
 
+        public string SubscriberFile { get { return m_subscribers; } }
         public string Stream { get { return m_stream; } }
         public string TwitchUsername { get { return m_twitchName; } }
         public string OauthPassword { get { return m_oauthPass; } }
@@ -375,6 +376,26 @@ namespace QuestionGrabber
             GetStringValue(options, section, out options.m_stream, "stream", section.GetValue("stream"));
             GetStringValue(options, section, out options.m_twitchName, "twitchname", section.GetValue("twitchname") ?? section.GetValue("user") ?? section.GetValue("username"));
             GetStringValue(options, section, out options.m_oauthPass, "oauth", section.GetValue("oauth") ?? section.GetValue("pass") ?? section.GetValue("password"));
+            GetStringValue(options, section, out options.m_subscribers, "subscribers", section.GetValue("subscribers"));
+
+            if (Directory.Exists(options.m_subscribers))
+                options.m_subscribers = Path.Combine(options.m_subscribers, "subs.txt");
+
+            string fn = options.m_subscribers;
+            if (!File.Exists(fn))
+            {
+                try
+                {
+                    File.WriteAllText(fn, "");
+                    File.Delete(fn);
+                }
+                catch (Exception e)
+                {
+                    MessageBox.Show(string.Format("Could not write to file {0}.\n\n{1}", fn, e));
+                    Environment.Exit(1);
+                }
+            }
+
 
             if (!options.m_oauthPass.StartsWith("oauth:"))
                 throw new FormatException("The 'oauth' field in the [Stream] section must start with 'oauth:'.\n\nThis is not your twitch password, please get your api key from www.twitchapps.com/tmi.");
@@ -464,7 +485,10 @@ namespace QuestionGrabber
         private static void GetStringValue(Options options, IniSection section, out string key, string name, string value)
         {
             if (string.IsNullOrWhiteSpace(value))
-                throw new FormatException(string.Format("Section [{0}] is missing value '{1}'.", section.Name, name));
+            {
+                MessageBox.Show(string.Format("Section [{0}] is missing value '{1}'.", section.Name, name), "Error in options.ini!");
+                Environment.Exit(1);
+            }
 
             key = value;
         }

@@ -41,6 +41,10 @@
     <AssemblyOriginatorKeyFile>DarkAutumn.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="IrcDotNet, Version=0.4.1.29601, Culture=neutral, PublicKeyToken=44f6d157e750246b, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\IrcDotNet.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
@@ -110,12 +114,6 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\star.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\IrcDotNet\IrcDotNet.csproj">
-      <Project>{47d551da-96ed-4ef6-96bf-4832059d4700}</Project>
-      <Name>IrcDotNet</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
