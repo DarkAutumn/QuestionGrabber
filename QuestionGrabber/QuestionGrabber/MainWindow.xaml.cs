@@ -447,19 +447,6 @@ namespace QuestionGrabber
         {
             ListItem item = ListItem.CreateFromNewSub(user);
             m_eventQueue.Enqueue(new NewSubscriberEvent(item, user));
-
-            if (!string.IsNullOrEmpty(m_options.SubscriberFile))
-            {
-                List<string> subs = new List<string>();
-                subs.Add(user);
-                if (File.Exists(m_options.SubscriberFile))
-                    subs.AddRange(File.ReadAllText(m_options.SubscriberFile).Split(',').Select(s=>s.Trim()));
-
-                if (subs.Count > 10)
-                    subs.RemoveRange(10, subs.Count - 10);
-
-                File.WriteAllText(m_options.SubscriberFile, string.Join(", ", subs));
-            }
         }
 
         /// <summary>

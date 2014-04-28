@@ -20,7 +20,6 @@
                     <DataTemplate>
                         <DockPanel ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                             <Image Margin="1" Visibility="{Binding SubscriberIcon}" VerticalAlignment="Top" Height="19" Width="19" Source="pack://application:,,,/Resources/star.png" />
-                            <TextBlock FontSize="{Binding UserFontSize}" Margin="0,0,3,0" Visibility="{Binding UserVisibility}" FontWeight="{Binding UserWeight}" Foreground="{Binding UserColor}" Text="{Binding User}" />
                             <TextBlock FontSize="{Binding MessageFontSize}" TextWrapping="Wrap" Visibility="{Binding MessageVisibility}" FontWeight="{Binding MessageWeight}" Foreground="{Binding MessageColor}" Text="{Binding Message}" />
                         </DockPanel>
                     </DataTemplate>
