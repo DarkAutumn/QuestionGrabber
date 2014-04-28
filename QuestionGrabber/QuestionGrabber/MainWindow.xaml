@@ -3,8 +3,14 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="DarkAutumn's Question Grabber" Height="800" Width="500"
         Background="AliceBlue" SizeToContent="Manual"
+        xmlns:local="clr-namespace:QuestionGrabber"
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
         >
+
+    <Window.Resources>
+        <local:Sample1Converter x:Key="Sample1Converter"/>
+    </Window.Resources>
+
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="0"/>
@@ -20,7 +26,14 @@
                     <DataTemplate>
                         <DockPanel ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                             <Image Margin="1" Visibility="{Binding SubscriberIcon}" VerticalAlignment="Top" Height="19" Width="19" Source="pack://application:,,,/Resources/star.png" />
-                            <TextBlock FontSize="{Binding MessageFontSize}" TextWrapping="Wrap" Visibility="{Binding MessageVisibility}" FontWeight="{Binding MessageWeight}" Foreground="{Binding MessageColor}" Text="{Binding Message}" />
+                            <local:ChatEntry
+                                Test="{Binding}"
+                                FontSize="{Binding MessageFontSize}"
+                                       TextWrapping="Wrap"
+                                       Visibility="{Binding MessageVisibility}"
+                                       FontWeight="{Binding MessageWeight}"
+                                       Foreground="{Binding MessageColor}"
+                                        />
                         </DockPanel>
                     </DataTemplate>
                 </ListView.ItemTemplate>

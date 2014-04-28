@@ -65,6 +65,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="ChatEntry.cs" />
     <Compile Include="DataModel.cs" />
     <Compile Include="IniReader.cs" />
     <Compile Include="TwitchClient.cs" />

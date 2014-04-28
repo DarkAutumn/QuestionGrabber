@@ -26,6 +26,72 @@ using System.Media;
 
 namespace QuestionGrabber
 {
+    public class Sample1Converter : IValueConverter
+    {
+        #region IValueConverter Members
+
+        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            ChatEntry textblock = value as ChatEntry;
+
+            Image img = new Image();
+            img.Source = new BitmapImage(new Uri(@"pack://application:,,,/Resources/star.png"));
+            img.Width = 16;
+            img.Height = 16;
+            img.Margin = new Thickness(2);
+            img.VerticalAlignment = VerticalAlignment.Center;
+
+            img.MouseDown += img_MouseDown;
+
+            textblock.Inlines.Add(new InlineUIContainer(img));
+            textblock.Inlines.Add(new Run("User") { FontWeight = FontWeights.Bold, Foreground = Brushes.Blue });
+            textblock.Inlines.Add(new Run(": "));
+            textblock.Inlines.Add(new Run("textValue"));
+
+            return null;
+        }
+
+        void img_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            return null;
+        }
+
+        #endregion
+    }
+
+    public class Sample2Converter : IValueConverter
+    {
+        #region IValueConverter Members
+
+        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            TextBlock textblock = value as TextBlock;
+            string[] strs = ((string)parameter).Split(' ');
+
+            textblock.ClearValue(TextBlock.TextProperty);
+            foreach (string str in strs)
+            {
+                if (str == "Text")
+                    textblock.Inlines.Add(new Run(str) { FontStyle = FontStyles.Italic, TextDecorations = TextDecorations.Underline });
+                else
+                    textblock.Inlines.Add(new Run(str));
+            }
+            return null;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            return null;
+        }
+
+        #endregion
+    }
+
 
     /// <summary>
     /// Interaction logic for MainWindow.xaml
